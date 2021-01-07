@@ -33,11 +33,11 @@ void StringListDestroy(char*** headNode) {
     }
         char** currentNode = (char**)(*headNode)[NodeNext];
         char** currentNodePrev = (char**) currentNode[NodePrev];
-        //while more than one node in a list
+        //while three or more nodes in a list
         while (currentNode[NodeNext]) {
             free(currentNodePrev[NodeData]);
             currentNodePrev[NodeData] = NULL;
-            currentNodePrev[NodeData] = NULL;
+            currentNodePrev[NodeNext] = NULL;
             free(*currentNodePrev);
             currentNodePrev = NULL;
             currentNode = (char**) currentNode[NodeNext];
