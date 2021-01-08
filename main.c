@@ -1,10 +1,16 @@
 #include "list.h"
 
+void CLInterface();
 
 int main() {
 
+    CLInterface();
+
+    return 0;
+}
+
+void CLInterface() {
     char** headNode = NULL;
-    
     printf("\nDo you want to initialize a list and continue the program? Type: y/n\n");
     char com;
     scanf("%c", &com);
@@ -19,7 +25,7 @@ int main() {
         printf("Type s to get a list size.\n");
         printf("Type i to get the index position of the first occurrence of a string in the list.\n");
         printf("Type repl to replace every occurrence of the \"before\", in each of the string list's strings,"
-                "with \"after\".\n");
+               "with \"after\".\n");
         printf("Type rd to remove duplicate strings from the list.\n");
         printf("Type sor to sort the list of strings in ascending order.\n");
         printf("Type d to destroy the list.\n");
@@ -74,5 +80,4 @@ int main() {
     } else if (com == 'n') {
         printf("The program has been finished.\n");
     }
-    return 0;
 }
