@@ -27,7 +27,7 @@ void StringListSort(char** headNode);
 /*--------------------------utility functions--------------------------*/
 //returns string length
 int StrLen(const char* str);
-//compare strings, if match returns 0, otherwise returns 1
+//compare strings, if match returns 0, otherwise ASCII dif
 int StrComp(const char* str1, const char* str2);
 //print list
 void StrListPrint(char** headNode);
