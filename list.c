@@ -5,28 +5,19 @@ enum Node {NodeData, NodePrev, NodeNext, NodeSize};
 #define DataNullTerminator 1
 
 //initializes list
-void StringListInit(char*** headNode,  char* str) {
+//repetitive init will reset a list to an empty list
+void StringListInit(char*** headNode) {
     *headNode = (char**) malloc(NodeSize * sizeof(char*));
     if (*headNode) {
-        size_t sizeOfStr = StrLen(str);
-        size_t sizeOfStrMemory = (sizeOfStr + DataNullTerminator) * sizeof(char);
-        //write str to NodeData
-        (*headNode)[NodeData] = (char*) malloc(sizeOfStrMemory * sizeof(char));
-        for (size_t i = 0; i <  sizeOfStrMemory; ++i) {
-            (*headNode)[NodeData][i] = str[i];
-        }
-        (*headNode)[NodeData][sizeOfStr] = '\0';
-    }
-    //if NodeData takes str successful, create prev and next pointers
-    if ((*headNode)[NodeData]) {
-        ((*headNode)[NodePrev]) = NULL;
+        (*headNode)[NodeData] = NULL;
+        (*headNode)[NodePrev] = NULL;
         (*headNode)[NodeNext] = NULL;
+        printf("List has been initialized.\n\n");
+    } else {
+        printf("List has not been initialized.\n\n");
     }
-    printf("List has been initialized.\n\n");
 }
-
 //destroy list and set pointer to NULL
-//bug: when one node breaks
 void StringListDestroy(char*** headNode) {
     if (!*headNode) {
         printf("List is already destroyed.\n");
@@ -35,9 +26,7 @@ void StringListDestroy(char*** headNode) {
     //if only one node in a list
     if(!(*headNode)[NodeNext]) {
         char** currentNode = (char**) (*headNode);
-        free(currentNode[NodeData]);
-        currentNode[NodeData] = NULL;
-        free(*currentNode);
+        free(currentNode);
         currentNode = NULL;
     } else {
         char** currentNode = (char**) (*headNode)[NodeNext];
@@ -55,11 +44,11 @@ void StringListDestroy(char*** headNode) {
         //free memory and null the last node
         free(currentNode[NodeData]);
         currentNode[NodeData] = NULL;
-        free(*currentNode);
+        free(currentNode);  //*
         currentNode = NULL;
     }
-    //to make !heaNode == TRUE
     *headNode = NULL;
+    headNode = NULL;
     printf("List has been destroyed.\n");
 }
 
@@ -67,10 +56,10 @@ void StringListDestroy(char*** headNode) {
 size_t StringListSize( char** headNode) {
     if (!headNode) {
         printf("List needs to be initialized.\n");
-        return 0;
+        return -1;
     }
     size_t listSize = 0;
-    char** currentNode = headNode;
+    char** currentNode = (char**)headNode[NodeNext];
     //iterate through a list
     while (currentNode) {
         currentNode = (char**) currentNode[NodeNext];
@@ -81,8 +70,8 @@ size_t StringListSize( char** headNode) {
 }
 
 //inserts value at the end of the list
-void StringListAdd(char** headNode, String str) {
-    if (!headNode) {
+void StringListAdd(char** headNode, char* str) {
+    if (!headNode || !str) {
         printf("List needs to be initialized.\n");
         return;
     }
@@ -114,18 +103,22 @@ void StringListAdd(char** headNode, String str) {
 }
 
 //removes all occurrences of str in the list
-void StringListRemove(char*** headNode, String str) {
-    if (!*headNode) {
+void StringListRemove(char*** headNode, char* str) {
+    if (!*headNode || !str) {
         printf("List needs to be initialized.\n");
+        return;
+    }
+    if (StringListSize(*headNode) == 0) {
+        printf("String not found. List is empty.\n");
         return;
     }
     int removedCount = 0;
     //check for an end of a list
-    while (*headNode) {
+    while ((*headNode)[NodeNext]) {
         const size_t stringInListFirst = 0;
         const size_t stringInListLast = StringListSize(*headNode) - 1;
         size_t listIter = 0;
-        char **currentNode = *headNode;
+        char** currentNode = (char**)(*headNode)[NodeNext];
         //search for a string in nodes
         while ((listIter <= stringInListLast) && StrComp(currentNode[NodeData], str)) {
             currentNode = (char**) currentNode[NodeNext];
@@ -136,14 +129,12 @@ void StringListRemove(char*** headNode, String str) {
                 printf("The string not found.\n");
             }
             else {
-                printf("The String has been removed successfully.\n");
+                printf("The string has been removed successfully.\n");
             }
             return;
         } else if (listIter == stringInListFirst) {
             //if string in a first node, move head to next
-            char** currentNodeNext = (char**) currentNode[NodeNext];
-            *headNode = currentNodeNext;
-            currentNodeNext = NULL;
+            (*headNode)[NodeNext] = currentNode[NodeNext];
         } else if (listIter == stringInListLast) {
             //if string in a last node, delink last node
             char** currentNodePrev = (char**) currentNode[NodePrev];
@@ -170,21 +161,20 @@ void StringListRemove(char*** headNode, String str) {
 
 //returns the index position of the first occurrence of str in the list
 int StringListIndexOf(char** headNode, char* str) {
-    if (!headNode) {
-        printf("List needs to be initialized");
+    if (!headNode || !str) {
+        printf("List needs to be initialized.\n");
         return -1;
     }
     //compare listIter and listSize to check if str is not in a list
     size_t listIter = 0;
     size_t listSize = StringListSize(headNode);
-    char** currentNode = headNode;
+    char** currentNode = (char**)headNode[NodeNext];
     //iterate through a list
     while (currentNode && StrComp(currentNode[NodeData], str)) {
         currentNode = (char**) currentNode[NodeNext];
         ++listIter;
     }
     currentNode = NULL;
-//    printf("%d", listIter);
     return (listIter < listSize) ? listIter : -1;
 }
 
@@ -194,10 +184,14 @@ void StringListRemoveDuplicates(char** headNode) {
         printf("List needs to be initialized\n");
         return;
     }
+    if (StringListSize(headNode) == 0) {
+        printf("List is empty.\n");
+        return;
+    }
     //pointer to be used for an outer loop
-    char** headNodeOuter = headNode;
+    char** headNodeOuter = (char**)headNode[NodeNext];
     //pointer to be used for an inner loop
-    char** headNodeInner = headNode;
+    char** headNodeInner = (char**)headNode[NodeNext];
     //three pointers to remove a node with str and link a list again
     char** nodeRemove = NULL;
     char** nodeRemovePrev = NULL;
@@ -226,13 +220,13 @@ void StringListRemoveDuplicates(char** headNode) {
                 free(nodeRemove);   //*
                 duplicatesCount++;
             }
-            // go to the next inner iteration
+                // go to the next inner iteration
             else {
                 headNodeInner = (char**) headNodeInner[NodeNext];
             }
         }
         //go to the next outer iteration
-        headNodeInner = headNode;
+        headNodeInner = (char**)headNode[NodeNext];
         headNodeOuter = (char**) headNodeOuter[NodeNext];
     }
     //null all axillary pointers
@@ -250,11 +244,15 @@ void StringListRemoveDuplicates(char** headNode) {
 
 //replaces every occurrence of the "before", in each of the string list's strings, with "after"
 void StringListReplaceInStrings(char** headNode, char* before, char* after) {
-    if (!headNode) {
+    if (!headNode || !before || !after) {
         printf("List needs to be initialized\n");
         return;
     }
-    char** currentNode = headNode;
+    if (StringListSize(headNode) == 0) {
+        printf("List is empty.\n");
+        return;
+    }
+    char** currentNode = (char**)headNode[NodeNext];
     size_t sizeOfStr = StrLen(after);
     size_t sizeOfMemoryAllocate = (sizeOfStr + DataNullTerminator) * sizeof(char);
     int replacementCount = 0;
@@ -281,11 +279,15 @@ void StringListReplaceInStrings(char** headNode, char* before, char* after) {
     printf("A sting has been replaced %d times.\n", replacementCount);
 }
 
-//sorts the list of strings in ascending order
+//sorts the list of strings in ascending order based on ASCII codes
 //algo: bubble sort; time complexity O(n^2), space complexity O(1)
 void StringListSort(char** headNode) {
     if (!headNode) {
         printf("List needs to be initialized.\n");
+        return;
+    }
+    if (StringListSize(headNode) == 0) {
+        printf("List is empty.\n");
         return;
     }
     char** currentNode = NULL;
@@ -295,7 +297,7 @@ void StringListSort(char** headNode) {
     int swappedCount;
     do {
         swappedCount = 0;
-        currentNode = headNode;
+        currentNode = (char**)headNode[NodeNext];
         //iterate through a list
         while (currentNode[NodeNext] != (char*) lastNode) {
             currentNodeNext = (char**) currentNode[NodeNext];
@@ -310,7 +312,7 @@ void StringListSort(char** headNode) {
         }
         lastNode = currentNode;
     } while(swappedCount);
-    printf("A list has been sorted in ascending order.\n");
+    printf("List has been sorted in ascending order.\n");
 }
 
 //returns string length
@@ -340,7 +342,10 @@ void StrListPrint(char** headNode) {
         return;
     }
     size_t sizeOfList = StringListSize(headNode);
-    char** currentNode = headNode;
+    if (sizeOfList == 0) {
+        printf("List is empty");
+    }
+    char** currentNode = (char**)headNode[NodeNext];
     for (size_t i = 0; i < sizeOfList; ++i) {
         printf("%s | ", currentNode[NodeData]);
         currentNode = (char**) currentNode[NodeNext];
